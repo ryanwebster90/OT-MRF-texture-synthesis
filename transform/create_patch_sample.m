@@ -1,24 +1,35 @@
-function [patch_sample_inds,sample_inds] = create_patch_sample(x_sz,patchsize,dataratio)
+function [patch_sample_inds,sample_inds] = create_patch_sample(x_sz,patchsize,dataratio,varargin)
 % create_patch_sample is used in conjuction with im2col_patch_sample
 % to randomly sample patches in an input tensor with probability dataratio.
-% im2col_patch_sample simply takes x(patch_sample_inds(:)), so this code
-% can be used to extract patches from an image extremely fast.
-
+% im2col_patch_sample extracts these patches from a tensor x and stores
+% them in their column stacked version X sized 
+% [x_sz(3)*patchsize^2 , floor(x_sz(1)*x_sz(2)*dataratio)
+%
+% See also: create_sample_inds, im2col_patch_sample
+%
 % INPUTS:
-% x_sz = size of image to take patches from
-% patchsize = #pels in side of square patch
-% dataratio = 0...1 ratio of patches sampled (e.g. .5 samples half)
+%   x_sz = size of image to take patches from
+%   patchsize = #pels in side of square patch
+%   dataratio = 0...1 ratio of patches sampled (e.g. .5 samples half)
+%
+% OPTIONS:
+%   'sample_inds'  As an alternative to dataratio, you can provide
+%   sample_inds, the linear indices of topleft index of patches, which
+%   are converted into every index of every patch.
+% 
 % OUTPUTS:
-% patch_sample_inds = every index in every patch contiguously.
-% sample_inds = topleft indices of patches in first two dims of x_sz
+%   patch_sample_inds = every index in every patch contiguously.
+%   sample_inds = topleft indices of patches in first two dims of x_sz
 %
 % Ryan Webster, 2017
 
+opts.sample_inds = [];
+opts = vl_argparse(opts,varargin);
+
+
 x_sz = [x_sz,ones(1,3-numel(x_sz))];
 %randomly sample 2d linear inds
-N = x_sz(1)*x_sz(2);
-sample_inds = randperm(N);
-sample_inds = sort(sample_inds(1:floor(numel(sample_inds)*dataratio)))';
+sample_inds = create_sample_inds(x_sz,dataratio);
 
 
 % turn linear sample inds into 2D inds
